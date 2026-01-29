@@ -1,0 +1,24 @@
+name: Build Lutris
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'build-scripts/build-lutris.sh'
+      - 'build-scripts/common.sh'
+      - 'debian/lutris/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Upstream version/tag to build (leave empty for latest)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-package.yml
+    with:
+      package_name: lutris
+      version: ${{ inputs.version || '' }}
+    permissions:
+      contents: write

@@ -1,0 +1,7 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: gamescope
+Source: https://github.com/ValveSoftware/gamescope
+
+Files: *
+Copyright: 2020-2025 Valve Corporation
+License: BSD-2-Clause

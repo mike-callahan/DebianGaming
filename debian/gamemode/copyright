@@ -1,0 +1,7 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: gamemode
+Source: https://github.com/FeralInteractive/gamemode
+
+Files: *
+Copyright: 2017-2025 Feral Interactive Ltd.
+License: BSD-3-Clause

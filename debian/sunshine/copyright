@@ -1,0 +1,7 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Sunshine
+Source: https://github.com/LizardByte/Sunshine
+
+Files: *
+Copyright: 2020-2025 LizardByte
+License: GPL-3.0

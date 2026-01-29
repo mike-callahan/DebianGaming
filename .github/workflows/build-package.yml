@@ -1,0 +1,84 @@
+name: Build Package (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        required: true
+        type: string
+      version:
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/mike-callahan/devgame-builder:latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Run build script
+      run: |
+        mkdir -p /workspace/debian
+        cp -r debian/${{ inputs.package_name }}/* /workspace/debian/
+        bash ./build-scripts/build-${{ inputs.package_name }}.sh
+      env:
+        BUILD_ROOT: /build
+        ARTIFACTS_DIR: /artifacts
+        WORKSPACE: /workspace
+        VERSION: ${{ inputs.version }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.package_name }}-debs
+        path: /artifacts/*.deb
+        retention-days: 90
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.package_name }}-debs
+        path: ./debs
+
+    - name: Get version from deb filename
+      id: version
+      run: |
+        DEB_FILE=$(ls ./debs/*.deb | head -n1)
+        VERSION=$(dpkg-deb -f "$DEB_FILE" Version 2>/dev/null || echo "latest")
+        # Sanitize for git tag (no ~ allowed)
+        TAG_VERSION=$(echo "$VERSION" | tr '~' '-')
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "tag_version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ inputs.package_name }}-${{ steps.version.outputs.tag_version }}
+        name: "${{ inputs.package_name }} ${{ steps.version.outputs.version }}"
+        body: |
+          Automated build of **${{ inputs.package_name }}** for Debian Trixie.
+
+          Install with:
+          ```bash
+          sudo dpkg -i <package>.deb
+          sudo apt-get install -f
+          ```
+
+          Or use the APT repository for automatic updates.
+        files: ./debs/*.deb
+        make_latest: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

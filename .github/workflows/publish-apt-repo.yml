@@ -1,0 +1,135 @@
+name: Publish APT Repository
+
+on:
+  workflow_run:
+    workflows:
+      - "Build Gamescope"
+      - "Build MangoHud"
+      - "Build GameMode"
+      - "Build Lutris"
+      - "Build Proton-GE"
+      - "Build Sunshine"
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-repo:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install tools
+      run: sudo apt-get update && sudo apt-get install -y reprepro gpg
+
+    - name: Import GPG key
+      env:
+        APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+      run: printf '%s' "$APT_GPG_PRIVATE_KEY" | gpg --batch --import
+
+    - name: Download all release debs
+      run: |
+        mkdir -p debs
+        # Get all releases and download their .deb assets
+        for release in $(gh release list --json tagName --jq '.[].tagName'); do
+          echo "Downloading debs from release: $release"
+          gh release download "$release" --dir debs/ --pattern "*.deb" 2>/dev/null || true
+        done
+        echo "Downloaded debs:"
+        ls -lh debs/*.deb 2>/dev/null || echo "No debs found"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build APT repo with reprepro
+      run: |
+        mkdir -p apt-repo/conf
+
+        # Get GPG key ID
+        GPG_KEY_ID=$(gpg --list-keys --keyid-format long 2>/dev/null | grep -A1 "^pub" | tail -n1 | xargs)
+
+        cat > apt-repo/conf/distributions <<EOF
+        Origin: DebianGaming
+        Label: DebianGaming
+        Codename: trixie
+        Architectures: amd64 all
+        Components: main
+        Description: Gaming packages for Debian Trixie
+        SignWith: ${GPG_KEY_ID}
+        EOF
+
+        cat > apt-repo/conf/options <<EOF
+        verbose
+        basedir /home/runner/work/DebianGaming/DebianGaming/apt-repo
+        EOF
+
+        # Add each deb to the repo
+        for deb in debs/*.deb; do
+          if [ -f "$deb" ]; then
+            echo "Adding $deb to repository..."
+            reprepro -b apt-repo includedeb trixie "$deb" || echo "Failed to add $deb"
+          fi
+        done
+
+    - name: Add public key and landing page
+      run: |
+        gpg --armor --export > apt-repo/debiangaming.gpg.key
+
+        cat > apt-repo/index.html <<'HTMLEOF'
+        <!DOCTYPE html>
+        <html>
+        <head><title>DebianGaming APT Repository</title></head>
+        <body>
+        <h1>DebianGaming APT Repository</h1>
+        <p>Gaming packages for Debian 13 (Trixie)</p>
+        <h2>Setup</h2>
+        <pre>
+        curl -fsSL https://mike-callahan.github.io/DebianGaming/debiangaming.gpg.key \
+          | sudo gpg --dearmor -o /usr/share/keyrings/debiangaming.gpg
+
+        echo "deb [signed-by=/usr/share/keyrings/debiangaming.gpg] https://mike-callahan.github.io/DebianGaming trixie main" \
+          | sudo tee /etc/apt/sources.list.d/debiangaming.list
+
+        sudo apt update
+        </pre>
+        <h2>Available Packages</h2>
+        <ul>
+          <li><strong>gamescope</strong> - SteamOS session compositing window manager</li>
+          <li><strong>mangohud</strong> - Vulkan/OpenGL performance overlay</li>
+          <li><strong>gamemode</strong> - Game performance optimization daemon</li>
+          <li><strong>lutris</strong> - Open Gaming Platform</li>
+          <li><strong>proton-ge-custom</strong> - Custom Proton build for Steam</li>
+          <li><strong>sunshine</strong> - Self-hosted game streaming</li>
+        </ul>
+        </body>
+        </html>
+        HTMLEOF
+
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: apt-repo
+
+  deploy:
+    needs: build-repo
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

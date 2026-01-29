@@ -1,0 +1,23 @@
+name: Build Proton-GE
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'build-scripts/build-proton-ge.sh'
+      - 'debian/proton-ge/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Upstream version/tag to build (leave empty for latest)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-package.yml
+    with:
+      package_name: proton-ge
+      version: ${{ inputs.version || '' }}
+    permissions:
+      contents: write

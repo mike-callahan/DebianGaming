@@ -1,0 +1,73 @@
+name: Check Upstream Releases
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Check for new upstream releases
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -euo pipefail
+
+        # Define upstream repos and their package names
+        declare -A UPSTREAMS=(
+          ["gamescope"]="ValveSoftware/gamescope"
+          ["mangohud"]="flightlessmango/MangoHud"
+          ["gamemode"]="FeralInteractive/gamemode"
+          ["lutris"]="lutris/lutris"
+          ["proton-ge"]="GloriousEggroll/proton-ge-custom"
+          ["sunshine"]="LizardByte/Sunshine"
+        )
+
+        for pkg in "${!UPSTREAMS[@]}"; do
+          repo="${UPSTREAMS[$pkg]}"
+          echo "Checking $pkg ($repo)..."
+
+          # Get latest upstream release tag
+          UPSTREAM_TAG=$(gh api "repos/$repo/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
+          if [[ -z "$UPSTREAM_TAG" ]]; then
+            # Fall back to latest tag if no releases
+            UPSTREAM_TAG=$(gh api "repos/$repo/tags" --jq '.[0].name' 2>/dev/null || echo "")
+          fi
+
+          if [[ -z "$UPSTREAM_TAG" ]]; then
+            echo "  Could not determine upstream tag for $pkg, skipping"
+            continue
+          fi
+
+          echo "  Latest upstream: $UPSTREAM_TAG"
+
+          # Check if we already have a release for this version
+          # Normalize version for comparison
+          NORMALIZED=$(echo "$UPSTREAM_TAG" | sed 's/^[vV]//' | sed 's/^GE-Proton//' | tr '-' '.')
+          EXISTING=$(gh release view "${pkg}-${NORMALIZED}-1~debiangaming" --json tagName --jq '.tagName' 2>/dev/null || echo "")
+
+          if [[ -n "$EXISTING" ]]; then
+            echo "  Already built $EXISTING, skipping"
+            continue
+          fi
+
+          # Also check with simpler tag format
+          EXISTING2=$(gh release list --json tagName --jq ".[].tagName" 2>/dev/null | grep "^${pkg}-" | head -n1 || echo "")
+          if [[ "$EXISTING2" == *"$NORMALIZED"* ]]; then
+            echo "  Already built (found $EXISTING2), skipping"
+            continue
+          fi
+
+          echo "  New release detected! Triggering build for $pkg @ $UPSTREAM_TAG"
+          gh workflow run "build-$(echo $pkg | tr '_' '-').yml" \
+            -f version="$UPSTREAM_TAG" || echo "  Failed to trigger build for $pkg"
+        done

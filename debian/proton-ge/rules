@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_configure:
+	@true
+
+override_dh_auto_build:
+	@true
+
+override_dh_auto_install:
+	mkdir -p debian/proton-ge-custom/usr/share/steam/compatibilitytools.d
+	if [ -d pkg/usr/share/steam/compatibilitytools.d ]; then \
+		cp -r pkg/usr/share/steam/compatibilitytools.d/* \
+			debian/proton-ge-custom/usr/share/steam/compatibilitytools.d/; \
+	fi
+
+override_dh_strip:
+	@true
+
+override_dh_shlibdeps:
+	@true

@@ -1,0 +1,45 @@
+Source: sunshine
+Section: games
+Priority: optional
+Maintainer: DebianGaming <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               cmake,
+               ninja-build,
+               pkg-config,
+               git,
+               libssl-dev,
+               libcurl4-openssl-dev,
+               libavdevice-dev,
+               libboost-all-dev,
+               libcap-dev,
+               libdrm-dev,
+               libevdev-dev,
+               libminiupnpc-dev,
+               libayatana-appindicator3-dev,
+               libnotify-dev,
+               libopus-dev,
+               libpulse-dev,
+               libva-dev,
+               libvdpau-dev,
+               libwayland-dev,
+               libx11-dev,
+               libx11-xcb-dev,
+               libxcb-shm0-dev,
+               libxcb-xfixes0-dev,
+               libxcb-xtest0-dev,
+               libxfixes-dev,
+               libxrandr-dev,
+               libxtst-dev,
+               nodejs,
+               npm,
+               numactl
+Standards-Version: 4.6.2
+Homepage: https://github.com/LizardByte/Sunshine
+
+Package: sunshine
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Self-hosted game stream host for Moonlight
+ Sunshine is a self-hosted game stream host for Moonlight, offering
+ low latency, cloud gaming server capabilities. It supports AMD,
+ Intel, and NVIDIA GPUs for hardware encoding.

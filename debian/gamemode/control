@@ -1,0 +1,30 @@
+Source: gamemode
+Section: games
+Priority: optional
+Maintainer: DebianGaming <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               meson,
+               ninja-build,
+               pkg-config,
+               libsystemd-dev,
+               systemd-dev,
+               libdbus-1-dev,
+               libinih-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/FeralInteractive/gamemode
+
+Package: gamemode
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, systemd
+Description: Daemon/lib combo for Linux game performance optimizations
+ GameMode is a daemon/lib combo that allows games to request a set of
+ optimizations be temporarily applied to the host OS and/or game process.
+ It is used by Steam and other game launchers.
+
+Package: libgamemode-dev
+Architecture: amd64
+Section: libdevel
+Depends: ${misc:Depends}
+Description: GameMode development files
+ Development headers and libraries for integrating GameMode support
+ into applications.

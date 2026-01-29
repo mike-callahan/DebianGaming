@@ -1,0 +1,45 @@
+Source: gamescope
+Section: games
+Priority: optional
+Maintainer: DebianGaming <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               meson,
+               ninja-build,
+               pkg-config,
+               cmake,
+               libdrm-dev,
+               libvulkan-dev,
+               libwayland-dev,
+               libx11-dev,
+               libxcomposite-dev,
+               libxdamage-dev,
+               libxext-dev,
+               libxfixes-dev,
+               libxres-dev,
+               libxtst-dev,
+               libxcb-composite0-dev,
+               libxcb-ewmh-dev,
+               libxcb-icccm4-dev,
+               libxcb-res0-dev,
+               libcap-dev,
+               libseat-dev,
+               libinih-dev,
+               libdisplay-info-dev,
+               libliftoff-dev,
+               libpipewire-0.3-dev,
+               libsdl2-dev,
+               glslang-tools,
+               libxmu-dev,
+               libxcb1-dev,
+               libxcb-xfixes0-dev,
+               wayland-protocols
+Standards-Version: 4.6.2
+Homepage: https://github.com/ValveSoftware/gamescope
+
+Package: gamescope
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: SteamOS session compositing window manager
+ Gamescope is a micro-compositor from Valve used in SteamOS 3.0.
+ It provides a Wayland compositor optimized for gaming with features
+ like FSR upscaling, frame limiting, and HDR support.

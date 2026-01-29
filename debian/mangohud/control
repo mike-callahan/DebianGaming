@@ -1,0 +1,25 @@
+Source: mangohud
+Section: games
+Priority: optional
+Maintainer: DebianGaming <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               meson,
+               ninja-build,
+               glslang-tools,
+               libvulkan-dev,
+               libdbus-1-dev,
+               libx11-dev,
+               libwayland-dev,
+               python3-mako,
+               pkg-config,
+               git,
+               libxkbcommon-dev
+Standards-Version: 4.6.2
+Homepage: https://github.com/flightlessmango/MangoHud
+
+Package: mangohud
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Vulkan and OpenGL overlay for monitoring system performance
+ MangoHud is a Vulkan and OpenGL overlay for monitoring FPS, temperatures,
+ CPU/GPU load, and other system performance metrics while gaming.

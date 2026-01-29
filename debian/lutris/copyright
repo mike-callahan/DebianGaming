@@ -1,0 +1,7 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: lutris
+Source: https://github.com/lutris/lutris
+
+Files: *
+Copyright: 2009-2025 Lutris Team
+License: GPL-3.0+

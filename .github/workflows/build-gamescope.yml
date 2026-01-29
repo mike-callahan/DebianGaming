@@ -1,0 +1,24 @@
+name: Build Gamescope
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'build-scripts/build-gamescope.sh'
+      - 'build-scripts/common.sh'
+      - 'debian/gamescope/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Upstream version/tag to build (leave empty for latest)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    uses: ./.github/workflows/build-package.yml
+    with:
+      package_name: gamescope
+      version: ${{ inputs.version || '' }}
+    permissions:
+      contents: write

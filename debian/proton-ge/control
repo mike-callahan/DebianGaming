@@ -1,0 +1,16 @@
+Source: proton-ge-custom
+Section: games
+Priority: optional
+Maintainer: DebianGaming <noreply@github.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/GloriousEggroll/proton-ge-custom
+
+Package: proton-ge-custom
+Architecture: amd64
+Depends: ${misc:Depends}
+Recommends: steam
+Description: GloriousEggroll custom Proton build for Steam
+ A custom build of Valve Proton with various patches and fixes for
+ better game compatibility on Linux. Installs system-wide to
+ /usr/share/steam/compatibilitytools.d/.

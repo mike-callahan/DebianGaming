@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: proton-ge-custom
+Source: https://github.com/GloriousEggroll/proton-ge-custom
+
+Files: *
+Copyright: 2018-2025 GloriousEggroll
+License: BSD-3-Clause
+ Proton is based on Wine and DXVK, each with their own licenses.

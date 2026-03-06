@@ -4,6 +4,7 @@
 
 override_dh_auto_configure:
 	dh_auto_configure --buildsystem=meson -- \
+		--wrap-mode=default \
 		-Dwith_xnvctrl=disabled \
 		-Dwith_nvml=disabled \
 		-Dappend_libdir_mangohud=false

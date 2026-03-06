@@ -7,5 +7,8 @@ override_dh_auto_configure:
 		-Dwith-sd-bus-provider=systemd \
 		-Dwith-examples=false
 
+override_dh_missing:
+	dh_missing --no-fail-on-missing
+
 override_dh_shlibdeps:
 	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

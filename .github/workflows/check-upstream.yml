@@ -37,10 +37,16 @@ jobs:
           echo "Checking $pkg ($repo)..."
 
           # Get latest upstream release tag
-          UPSTREAM_TAG=$(gh api "repos/$repo/releases/latest" --jq '.tag_name' 2>/dev/null || echo "")
+          UPSTREAM_TAG=$(gh api "repos/$repo/releases/latest" --jq '.tag_name // empty' 2>/dev/null || true)
+          if [[ "$UPSTREAM_TAG" == "{"* ]] || [[ "$UPSTREAM_TAG" == "null" ]]; then
+            UPSTREAM_TAG=""
+          fi
           if [[ -z "$UPSTREAM_TAG" ]]; then
             # Fall back to latest tag if no releases
-            UPSTREAM_TAG=$(gh api "repos/$repo/tags" --jq '.[0].name' 2>/dev/null || echo "")
+            UPSTREAM_TAG=$(gh api "repos/$repo/tags" --jq '.[0].name // empty' 2>/dev/null || true)
+            if [[ "$UPSTREAM_TAG" == "{"* ]] || [[ "$UPSTREAM_TAG" == "null" ]]; then
+              UPSTREAM_TAG=""
+            fi
           fi
 
           if [[ -z "$UPSTREAM_TAG" ]]; then

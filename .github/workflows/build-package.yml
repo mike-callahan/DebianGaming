@@ -80,5 +80,6 @@ jobs:
           Or use the APT repository for automatic updates.
         files: ./debs/*.deb
         make_latest: false
+        overwrite_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

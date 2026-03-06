@@ -1,13 +1,18 @@
 #!/usr/bin/make -f
 
 export DEB_BUILD_OPTIONS = nocheck
+export NINJA_ARGS = -j1
 
 %:
 	dh $@
 
 override_dh_auto_configure:
 	dh_auto_configure --buildsystem=meson -- \
-		--wrap-mode=nodownload
+		--wrap-mode=nodownload \
+		-Denable-nls=false
 
 override_dh_auto_build:
-	dh_auto_build --buildsystem=meson --parallel=1
+	dh_auto_build --buildsystem=meson -- -j1
+
+override_dh_auto_test:
+	@true

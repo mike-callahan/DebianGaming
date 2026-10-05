@@ -7,26 +7,26 @@ WORKSPACE="${WORKSPACE:-/workspace}"
 PKG_NAME="proton-ge-custom"
 INSTALL_DIR="usr/share/steam/compatibilitytools.d"
 
-# Fetch latest release info from GitHub API
-AUTH_HEADER=""
+# Fetch release info from GitHub API: the tag requested via VERSION, or latest
+CURL_ARGS=(-s)
 if [[ -n "${GH_TOKEN:-}" ]]; then
-    AUTH_HEADER="-H Authorization: Bearer $GH_TOKEN"
+    CURL_ARGS+=(-H "Authorization: Bearer $GH_TOKEN")
 fi
-LATEST=$(curl -s $AUTH_HEADER https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest)
-TAG=$(echo "$LATEST" | jq -r '.tag_name // empty')
+API_BASE="https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases"
+if [[ -n "${VERSION:-}" ]]; then
+    RELEASE=$(curl "${CURL_ARGS[@]}" "$API_BASE/tags/$VERSION")
+else
+    RELEASE=$(curl "${CURL_ARGS[@]}" "$API_BASE/latest")
+fi
+TAG=$(echo "$RELEASE" | jq -r '.tag_name // empty')
 if [[ -z "$TAG" ]]; then
-    echo "Failed to fetch latest release from GitHub API"
-    echo "Response: $LATEST"
+    echo "Failed to fetch release '${VERSION:-latest}' from GitHub API"
+    echo "Response: $RELEASE"
     exit 1
 fi
 VERSION=$(echo "$TAG" | sed 's/^GE-Proton//' | tr '-' '.')
 
-if [[ -n "${VERSION_OVERRIDE:-}" ]]; then
-    TAG="GE-Proton${VERSION_OVERRIDE//./-}"
-    VERSION="$VERSION_OVERRIDE"
-fi
-
-TARBALL_URL=$(echo "$LATEST" | jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .browser_download_url')
+TARBALL_URL=$(echo "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .browser_download_url')
 
 echo "Building Proton-GE $TAG (version $VERSION)"
 

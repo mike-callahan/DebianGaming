@@ -42,7 +42,14 @@ jobs:
       run: |
         mkdir -p debs
         # Get all releases and download their .deb assets
-        for release in $(gh release list --json tagName --jq '.[].tagName'); do
+        # (--limit: gh defaults to 30, which would silently drop older releases)
+        for release in $(gh release list --limit 1000 --json tagName --jq '.[].tagName'); do
+          # proton-ge debs are ~0.5 GB and would exceed GitHub Pages size
+          # limits; they are published via GitHub Releases only
+          if [[ "$release" == proton-ge-* ]]; then
+            echo "Skipping $release (GitHub Releases only)"
+            continue
+          fi
           echo "Downloading debs from release: $release"
           gh release download "$release" --dir debs/ --pattern "*.deb" 2>/dev/null || true
         done
@@ -55,8 +62,8 @@ jobs:
       run: |
         mkdir -p apt-repo/conf
 
-        # Get GPG key ID
-        GPG_KEY_ID=$(gpg --list-keys --keyid-format long 2>/dev/null | grep -A1 "^pub" | tail -n1 | xargs)
+        # Get GPG key ID (machine-readable output; field 5 of the pub record)
+        GPG_KEY_ID=$(gpg --list-keys --with-colons | awk -F: '/^pub:/ {print $5; exit}')
 
         cat > apt-repo/conf/distributions <<EOF
         Origin: DebianGaming
@@ -73,11 +80,11 @@ jobs:
         basedir /home/runner/work/DebianGaming/DebianGaming/apt-repo
         EOF
 
-        # Add each deb to the repo
+        # Add each deb to the repo (any failure fails the job)
         for deb in debs/*.deb; do
           if [ -f "$deb" ]; then
             echo "Adding $deb to repository..."
-            reprepro -b apt-repo includedeb trixie "$deb" || echo "Failed to add $deb"
+            reprepro -b apt-repo includedeb trixie "$deb"
           fi
         done
 
@@ -108,7 +115,7 @@ jobs:
           <li><strong>mangohud</strong> - Vulkan/OpenGL performance overlay</li>
           <li><strong>gamemode</strong> - Game performance optimization daemon</li>
           <li><strong>lutris</strong> - Open Gaming Platform</li>
-          <li><strong>proton-ge-custom</strong> - Custom Proton build for Steam</li>
+          <li><strong>proton-ge-custom</strong> - Custom Proton build for Steam (GitHub Releases only, not in this APT repo)</li>
           <li><strong>sunshine</strong> - Self-hosted game streaming</li>
         </ul>
         </body>

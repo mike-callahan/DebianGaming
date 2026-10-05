@@ -12,7 +12,7 @@ Many Linux gaming projects only officially support Arch or Nix. This repo automa
 | **mangohud** | Vulkan/OpenGL overlay for FPS, temps, CPU/GPU load | [flightlessmango/MangoHud](https://github.com/flightlessmango/MangoHud) |
 | **gamemode** | Game performance optimization daemon | [FeralInteractive/gamemode](https://github.com/FeralInteractive/gamemode) |
 | **lutris** | Open Gaming Platform | [lutris/lutris](https://github.com/lutris/lutris) |
-| **proton-ge-custom** | GloriousEggroll's custom Proton for Steam | [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom) |
+| **proton-ge-custom** \* | GloriousEggroll's custom Proton for Steam | [GloriousEggroll/proton-ge-custom](https://github.com/GloriousEggroll/proton-ge-custom) |
 | **sunshine** | Self-hosted game stream host for Moonlight | [LizardByte/Sunshine](https://github.com/LizardByte/Sunshine) |
 
 ## Install via APT (Recommended)
@@ -32,6 +32,8 @@ echo "deb [signed-by=/usr/share/keyrings/debiangaming.gpg] https://mike-callahan
 sudo apt update
 sudo apt install gamescope mangohud gamemode lutris sunshine
 ```
+
+\* **proton-ge-custom** is not in the APT repository — its packages are too large for GitHub Pages. Download it from [GitHub Releases](https://github.com/mike-callahan/DebianGaming/releases) instead (see Manual Download below).
 
 ## Manual Download
 

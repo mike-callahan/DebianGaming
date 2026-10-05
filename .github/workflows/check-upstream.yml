@@ -32,6 +32,8 @@ jobs:
           ["sunshine"]="LizardByte/Sunshine"
         )
 
+        FAILED_DISPATCHES=()
+
         for pkg in "${!UPSTREAMS[@]}"; do
           repo="${UPSTREAMS[$pkg]}"
           echo "Checking $pkg ($repo)..."
@@ -56,24 +58,28 @@ jobs:
 
           echo "  Latest upstream: $UPSTREAM_TAG"
 
-          # Check if we already have a release for this version
-          # Normalize version for comparison
-          NORMALIZED=$(echo "$UPSTREAM_TAG" | sed 's/^[vV]//' | sed 's/^GE-Proton//' | tr '-' '.')
-          EXISTING=$(gh release view "${pkg}-${NORMALIZED}-1~debiangaming" --json tagName --jq '.tagName' 2>/dev/null || echo "")
+          # Check if we already have a release for this version.
+          # Normalize the version the same way common.sh generate_changelog does
+          # (strip leading non-digits, '-' -> '.'), then use the tag format
+          # build-package.yml actually creates: the deb version is
+          # <normalized>-1~debiangaming and '~' becomes '-' in the git tag.
+          NORMALIZED=$(echo "$UPSTREAM_TAG" | sed 's/^[^0-9]*//' | tr '-' '.')
+          RELEASE_TAG="${pkg}-${NORMALIZED}-1-debiangaming"
+          EXISTING=$(gh release view "$RELEASE_TAG" --json tagName --jq '.tagName' 2>/dev/null || echo "")
 
           if [[ -n "$EXISTING" ]]; then
             echo "  Already built $EXISTING, skipping"
             continue
           fi
 
-          # Also check with simpler tag format
-          EXISTING2=$(gh release list --json tagName --jq ".[].tagName" 2>/dev/null | grep "^${pkg}-" | head -n1 || echo "")
-          if [[ "$EXISTING2" == *"$NORMALIZED"* ]]; then
-            echo "  Already built (found $EXISTING2), skipping"
-            continue
-          fi
-
           echo "  New release detected! Triggering build for $pkg @ $UPSTREAM_TAG"
-          gh workflow run "build-$(echo $pkg | tr '_' '-').yml" \
-            -f version="$UPSTREAM_TAG" || echo "  Failed to trigger build for $pkg"
+          if ! gh workflow run "build-${pkg}.yml" -f version="$UPSTREAM_TAG"; then
+            echo "  Failed to trigger build for $pkg"
+            FAILED_DISPATCHES+=("$pkg")
+          fi
         done
+
+        if [[ ${#FAILED_DISPATCHES[@]} -gt 0 ]]; then
+          echo "Failed to dispatch builds for: ${FAILED_DISPATCHES[*]}"
+          exit 1
+        fi

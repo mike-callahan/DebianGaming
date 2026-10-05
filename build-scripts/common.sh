@@ -90,6 +90,8 @@ copy_debian_and_build() {
     # debs are created in parent directory
     cp "$src_dir"/../*.deb "$ARTIFACTS_DIR/" 2>/dev/null || true
     cp "$BUILD_ROOT"/*.deb "$ARTIFACTS_DIR/" 2>/dev/null || true
+    # Don't ship auto-generated debug-symbol packages
+    rm -f "$ARTIFACTS_DIR"/*-dbgsym_*.deb
 
     echo "Build complete. Packages:"
     ls -lh "$ARTIFACTS_DIR/"*.deb 2>/dev/null || echo "No .deb files found"
